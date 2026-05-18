@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GenLayer Studio</title>
+    <script>
+      // Global Fetch Guard: Some libraries (like older WalletConnect/UniversalProvider) 
+      // attempt to patch window.fetch. In restricted environments, window.fetch is a 
+      // read-only getter, and attempting to assign to it throws a TypeError.
+      try {
+        const originalFetch = window.fetch;
+        if (originalFetch) {
+          Object.defineProperty(window, 'fetch', {
+            configurable: true,
+            enumerable: true,
+            get: function() { return originalFetch; },
+            set: function() { 
+              console.warn('GenLayer Studio: Blocked attempt to override window.fetch'); 
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('GenLayer Studio: Fetch guard initialization failed', e);
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
