@@ -10,6 +10,10 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit"
   },
+  "overrides": {
+    "react": "$react",
+    "react-dom": "$react-dom"
+  },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
     "@fontsource-variable/geist": "^5.2.8",
