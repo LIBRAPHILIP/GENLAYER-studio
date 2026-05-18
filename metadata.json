@@ -1,0 +1,6 @@
+{
+  "name": "GenLayer Studio",
+  "description": "Next-gen intelligent contract development platform for GenLayer. Features an IDE, contract simulation, faucet, and documentation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
