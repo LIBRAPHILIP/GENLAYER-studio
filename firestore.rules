@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['email', 'createdAt']) &&
+             data.email is string &&
+             data.createdAt is string;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; 
+      allow create: if isOwner(userId); // Initialized on sign-in or first update
+      allow update: if isOwner(userId) && (
+        // Allow updating specific fields
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['displayName', 'photoURL', 'githubId', 'walletAddress', 'updatedAt', 'createdAt', 'email'])
+      );
+      allow delete: if false;
+    }
+  }
+}
