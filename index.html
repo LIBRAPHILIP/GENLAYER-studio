@@ -1,33 +1,61 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GenLayer Studio</title>
     <script>
-      // Global Fetch Guard: Some libraries (like older WalletConnect/UniversalProvider) 
-      // attempt to patch window.fetch. In restricted environments, window.fetch is a 
-      // read-only getter, and attempting to assign to it throws a TypeError.
-      try {
-        const originalFetch = window.fetch;
-        if (originalFetch) {
-          Object.defineProperty(window, 'fetch', {
-            configurable: true,
-            enumerable: true,
-            get: function() { return originalFetch; },
-            set: function() { 
-              console.warn('GenLayer Studio: Blocked attempt to override window.fetch'); 
+      // Guard against common iframe/sandbox environment issues with ethereum and fetch properties
+      (function() {
+        // 1. Intercept Object.defineProperty to prevent crashes when wallets or libraries try to re-define read-only/non-configurable properties like 'ethereum' or 'fetch' in some browser environments
+        try {
+          const originalDefineProperty = Object.defineProperty;
+          Object.defineProperty = function(obj, prop, descriptor) {
+            try {
+              return originalDefineProperty(obj, prop, descriptor);
+            } catch (error) {
+              if (prop === 'ethereum' || prop === 'fetch') {
+                console.warn(`[GenLayer Guard] Silenced Object.defineProperty error for '${prop}':`, error);
+                return obj;
+              }
+              throw error;
             }
-          });
+          };
+        } catch (e) {
+          console.error("[GenLayer Guard] Failed to hook Object.defineProperty:", e);
         }
-      } catch (e) {
-        console.warn('GenLayer Studio: Fetch guard initialization failed', e);
-      }
+
+        // 2. Safely redefine 'fetch' with a getter & setter to prevent "Cannot set property fetch of #<Window> which has only a getter"
+        try {
+          let currentFetch = window.fetch;
+          Object.defineProperty(window, 'fetch', {
+            get() { return currentFetch; },
+            set(val) { currentFetch = val; },
+            configurable: true,
+            enumerable: true
+          });
+        } catch (e) {
+          console.warn("[GenLayer Guard] Could not wrap fetch with safe getter/setter:", e);
+        }
+
+        // 3. Safely redefine 'ethereum' with a getter & setter to prevent crashes on direct assignments
+        try {
+          let currentEthereum = window.ethereum;
+          Object.defineProperty(window, 'ethereum', {
+            get() { return currentEthereum; },
+            set(val) { currentEthereum = val; },
+            configurable: true,
+            enumerable: true
+          });
+        } catch (e) {
+          console.warn("[GenLayer Guard] Could not wrap ethereum with safe getter/setter:", e);
+        }
+      })();
     </script>
   </head>
-  <body>
+  <body class="bg-black">
     <div id="root"></div>
-    <script type="module" src="./src/main.tsx"></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-
